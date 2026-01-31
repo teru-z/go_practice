@@ -9,10 +9,11 @@ vet: fmt
 	go vet ./...
 
 clean: vet
-	rm -f hello
+	rm -rf bin/
 
 build: clean
-	go build -o hello .
+	@mkdir -p bin
+	go build -o bin/hello .
 
 run: build
-	./hello
+	./bin/hello
