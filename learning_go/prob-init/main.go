@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// テンプレ生成
-	mainFilePath := filepath.Join(dirPath, modName+"_main.go")
+	mainFilePath := filepath.Join(dirPath, "main.go")
 	template := `package main
 
 import "fmt"
