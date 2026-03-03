@@ -25,6 +25,9 @@ func parser(data []byte) (Input, error) {
 	// parse the data
 	lines := bytes.Split(data, []byte("\n"))
 	// each entry is line 1 id, line 2 operator, line 3 num 1, line 4 num2
+	if len(lines) < 4 {
+		return Input{}, fmt.Errorf("invalid input: need 4 lines, got %d", len(lines))
+	}
 	id := string(lines[0])
 	op := string(lines[1])
 	val1, err := strconv.Atoi(string(lines[2]))
@@ -58,6 +61,9 @@ func DataProcessor(in <-chan []byte, out chan<- Result) {
 		case "*":
 			calc = input.Val1 * input.Val2
 		case "/":
+			if input.Val2 == 0 {
+				continue
+			}
 			calc = input.Val1 / input.Val2
 		default:
 			continue
@@ -85,7 +91,10 @@ func NewController(out chan []byte) http.Handler {
 	var numSent int
 	var numRejected int
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		numSent++
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
 		// take in data
 		data, err := io.ReadAll(r.Body)
 		defer r.Body.Close()
@@ -105,6 +114,7 @@ func NewController(out chan []byte) http.Handler {
 			w.Write([]byte("Too Busy: " + strconv.Itoa(numRejected)))
 			return
 		}
+		numSent++
 		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("OK: " + strconv.Itoa(numSent)))
 	})
